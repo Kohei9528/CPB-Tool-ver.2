@@ -123,11 +123,15 @@ border-top:1px solid #eee;
 
 </div>
 
-<!-- ================= Perfusion ================= -->
+<!-- ================= Perfusion（UI改善済み） ================= -->
 <div id="clinical" class="section">
 
-<div class="field" style="justify-content:space-around;">
-Hb
+<h3 style="text-align:center;">CDI Data</h3>
+
+<div style="text-align:center; margin-bottom:12px;">
+
+<div>Hb</div>
+<div>
 <button onclick="adjust('hb_now',-0.5)">-0.5</button>
 <button onclick="adjust('hb_now',-0.1)">-0.1</button>
 <input id="hb_now" value="7.5" inputmode="decimal" oninput="calcAll()">
@@ -135,43 +139,67 @@ Hb
 <button onclick="adjust('hb_now',0.5)">+0.5</button>
 </div>
 
-<div class="field">
-SBE
+<br>
+
+<div>SBE</div>
+<div>
 <button onclick="adjust('sbe_now',-1)">-1</button>
 <input id="sbe_now" value="-5" inputmode="decimal" oninput="calcAll()">
 <button onclick="adjust('sbe_now',1)">+1</button>
 </div>
 
-<div class="field">
-SaO2
+<br>
+
+<div>SaO2</div>
+<div>
 <button onclick="adjust('sao2_now',-1)">-1</button>
 <input id="sao2_now" value="100" inputmode="decimal" oninput="calcAll()">
 <button onclick="adjust('sao2_now',1)">+1</button>
 </div>
 
-<div class="field">
-CI
+<br>
+
+<div>CI</div>
+<div>
 <button onclick="adjust('ci_now',-0.1)">-0.1</button>
 <input id="ci_now" value="2.4" inputmode="decimal" oninput="calcAll()">
 <button onclick="adjust('ci_now',0.1)">+0.1</button>
 </div>
 
-<hr>
-
-<div id="flow" class="result">Flow : --</div>
-<div id="do2" class="result">DO2 : --</div>
+</div>
 
 <hr>
 
-<div class="field">
-目標Hb<input id="target_hb" value="9" inputmode="decimal" oninput="calcAll()">
-</div>
-<div id="rbc" class="result">必要RBC : --</div>
+<h3 style="text-align:center;">Results</h3>
 
-<div class="field">
-目標SBE<input id="target_sbe" value="0" inputmode="decimal" oninput="calcAll()">
+<div id="flow" class="result" style="text-align:center;">Flow : --</div>
+<div id="do2" class="result" style="text-align:center;">DO2 : --</div>
+
+<hr>
+
+<h3 style="text-align:center;">Adjustments</h3>
+
+<div style="text-align:center;">
+
+<div style="margin-bottom:10px;">
+目標Hb
+<button onclick="adjust('target_hb',-0.5)">-0.5</button>
+<input id="target_hb" value="9" inputmode="decimal" oninput="calcAll()">
+<button onclick="adjust('target_hb',0.5)">+0.5</button>
+　
+必要RBC <span id="rbc">--</span>
 </div>
-<div id="meylon" class="result">必要メイロン : --</div>
+
+<div>
+目標SBE
+<button onclick="adjust('target_sbe',-1)">-1</button>
+<input id="target_sbe" value="0" inputmode="decimal" oninput="calcAll()">
+<button onclick="adjust('target_sbe',1)">+1</button>
+　
+必要メイロン <span id="meylon">--</span>
+</div>
+
+</div>
 
 </div>
 
@@ -268,11 +296,11 @@ document.getElementById("do2").innerHTML="<span style='color:"+color+"'>DO2 : "+
 
 let r=targetHb-hb
 if(r<0)r=0
-rbc.innerHTML="必要RBC : "+r.toFixed(1)
+document.getElementById("rbc").innerText=r.toFixed(1)
 
 let m=0.36*w*(targetSBE-sbe)
 if(m<0)m=0
-meylon.innerHTML="必要メイロン : "+m.toFixed(0)
+document.getElementById("meylon").innerText=m.toFixed(0)
 }
 }
 
