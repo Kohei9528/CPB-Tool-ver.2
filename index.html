@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CPB Tool</title>
+
+<style>
+body{font-family:-apple-system;background:#f2f2f7;padding:16px;}
+details{background:white;padding:12px;margin-bottom:12px;border-radius:12px;}
+.row{display:flex;gap:10px;flex-wrap:wrap;}
+.field{display:flex;align-items:center;gap:5px;background:#fafafa;padding:6px;border-radius:8px;}
+input{width:60px;text-align:center;}
+button{padding:2px 6px;}
+.result{font-weight:bold;margin-top:6px;}
+</style>
+
+</head>
+
+<body>
+
+<h2>CPB Tool</h2>
+
+<!-- ================= 基本データ ================= -->
+<details open>
+<summary>基本データ</summary>
+
+<div class="row">
+<div class="field">身長<input id="height" inputmode="decimal" oninput="calcAll()"></div>
+<div class="field">体重<input id="weight" inputmode="decimal" oninput="calcAll()"></div>
+</div>
+
+<div class="row">
+<div class="field">Hb<input id="hb" inputmode="decimal" oninput="calcAll()"></div>
+<div class="field">Alb<input id="alb" inputmode="decimal" oninput="calcAll()"></div>
+</div>
+
+<div class="field">Prime<input id="prime" inputmode="decimal" oninput="calcAll()"></div>
+
+<div id="bsa" class="result">BSA : --</div>
+<div id="hbDil" class="result">予想Hb : --</div>
+<div id="dilution" class="result">希釈率 : --</div>
+<div id="albDil" class="result">予想Alb : --</div>
+
+</details>
+
+<!-- ================= 臨床モード ================= -->
+<details>
+<summary>臨床モード</summary>
+
+<div class="field">
+Hb
+<button onclick="adjust('hb_now',-0.5)">-0.5</button>
+<button onclick="adjust('hb_now',-0.1)">-0.1</button>
+<input id="hb_now" value="7.5" inputmode="decimal" oninput="calcAll()">
+<button onclick="adjust('hb_now',0.1)">+0.1</button>
+<button onclick="adjust('hb_now',0.5)">+0.5</button>
+</div>
+
+<div class="field">
+SBE
+<button onclick="adjust('sbe_now',-1)">-1</button>
+<input id="sbe_now" value="-5" inputmode="decimal" oninput="calcAll()">
+<button onclick="adjust('sbe_now',1)">+1</button>
+</div>
+
+<div class="field">
+SaO2
+<button onclick="adjust('sao2_now',-1)">-1</button>
+<input id="sao2_now" value="100" inputmode="decimal" oninput="calcAll()">
+<button onclick="adjust('sao2_now',1)">+1</button>
+</div>
+
+<div class="field">
+CI
+<button onclick="adjust('ci_now',-0.1)">-0.1</button>
+<input id="ci_now" value="2.4" inputmode="decimal" oninput="calcAll()">
+<button onclick="adjust('ci_now',0.1)">+0.1</button>
+</div>
+
+<hr>
+
+<div id="flow" class="result">Flow : --</div>
+<div id="do2" class="result">DO2 : --</div>
+
+<hr>
+
+<div class="field">
+目標Hb<input id="target_hb" value="9" inputmode="decimal" oninput="calcAll()">
+</div>
+<div id="rbc" class="result">必要RBC : --</div>
+
+<div class="field">
+目標SBE<input id="target_sbe" value="0" inputmode="decimal" oninput="calcAll()">
+</div>
+<div id="meylon" class="result">必要メイロン : --</div>
+
+</details>
+
+<!-- ================= CPカリウム ================= -->
+<details>
+<summary>CPカリウム</summary>
+
+<label>
+<input type="checkbox" id="cp_ratio" onchange="calcAll()">×1.5
+</label>
+
+<h3>初回</h3>
+<div class="row">
+<div class="field">投与量<input id="cp_init" value="800" readonly></div>
+<div class="field">K<input id="k1" inputmode="decimal" oninput="calcAll()"></div>
+</div>
+<div id="kPred1" class="result">予測K : --</div>
+
+<h3>持続</h3>
+<div class="row">
+<div class="field">投与量<input id="cp_cont" readonly></div>
+<div class="field">K<input id="k2" inputmode="decimal" oninput="calcAll()"></div>
+</div>
+<div id="kPred2" class="result">予測K : --</div>
+
+<h3>Hotshot</h3>
+<div class="row">
+<div class="field">投与量<input value="600" readonly></div>
+<div class="field">K<input id="k3" inputmode="decimal" oninput="calcAll()"></div>
+</div>
+<div id="kPred3" class="result">予測K : --</div>
+
+<hr>
+<div id="totalK" class="result">総K投与量 : --</div>
+
+</details>
+
+<script>
+
+// ================= 全体 =================
+function calcAll(){
+calcPre()
+calcClinical()
+calcCP()
+}
+
+// ================= 基本 =================
+function calcPre(){
+let h=parseFloat(height.value)||0
+let w=parseFloat(weight.value)||0
+let hb=parseFloat(document.getElementById("hb").value)||0
+let alb=parseFloat(document.getElementById("alb").value)||0
+let prime=parseFloat(document.getElementById("prime").value)||0
+
+if(h&&w){
+let b=Math.sqrt((h*w)/3600)
+bsa.innerHTML="BSA : "+b.toFixed(2)
+
+let blood=w*70
+if(hb) hbDil.innerHTML="予想Hb : "+(hb*blood/(blood+prime)).toFixed(2)
+if(alb) albDil.innerHTML="予想Alb : "+(alb*blood/(blood+prime)).toFixed(2)
+
+dilution.innerHTML="希釈率 : "+((blood+prime)/blood).toFixed(2)
+}
+}
+
+// ================= 臨床 =================
+function calcClinical(){
+let h=parseFloat(height.value)||0
+let w=parseFloat(weight.value)||0
+let hb=parseFloat(hb_now.value)||0
+let sao2=(parseFloat(sao2_now.value)||0)/100
+let ci=parseFloat(ci_now.value)||0
+let sbe=parseFloat(sbe_now.value)||0
+
+let targetHb=parseFloat(target_hb.value)||0
+let targetSBE=parseFloat(target_sbe.value)||0
+
+if(h&&w){
+let b=Math.sqrt((h*w)/3600)
+let flow=ci*b
+document.getElementById("flow").innerHTML="Flow : "+flow.toFixed(2)
+
+let do2=1.34*hb*sao2*flow*10/b
+document.getElementById("do2").innerHTML="DO2 : "+do2.toFixed(0)
+
+let r=targetHb-hb
+if(r<0)r=0
+rbc.innerHTML="必要RBC : "+r.toFixed(1)
+
+let m=0.36*w*(targetSBE-sbe)
+if(m<0)m=0
+meylon.innerHTML="必要メイロン : "+m.toFixed(0)
+}
+}
+
+// ================= CP =================
+function calcCP(){
+let w=parseFloat(weight.value)||0
+let ratio=document.getElementById("cp_ratio").checked?1.5:1
+
+let init=800*ratio
+cp_init.value=init.toFixed(0)
+
+let cont=10*w*ratio
+cp_cont.value=cont.toFixed(0)
+
+let ecf=w*0.2
+let k=37
+let total=0
+
+function calcK(val,vol,div){
+if(!val||!w)return
+let dose=(vol/div/1000)*k
+total+=dose
+return val+(dose/ecf)
+}
+
+let r1=calcK(parseFloat(k1.value),init,2)
+if(r1) kPred1.innerHTML="予測K : "+r1.toFixed(2)
+
+let r2=calcK(parseFloat(k2.value),cont,3)
+if(r2) kPred2.innerHTML="予測K : "+r2.toFixed(2)
+
+let r3=calcK(parseFloat(k3.value),600,4)
+if(r3) kPred3.innerHTML="予測K : "+r3.toFixed(2)
+
+totalK.innerHTML="総K投与量 : "+total.toFixed(1)+" mEq"
+}
+
+// ================= ボタン =================
+function adjust(id,delta){
+let el=document.getElementById(id)
+let v=parseFloat(el.value)||0
+v+=delta
+el.value=v.toFixed(1)
+calcAll()
+}
+
+</script>
+
+</body>
+</html>
