@@ -94,12 +94,12 @@ border-top:1px solid #eee;
 
 <!-- タブ -->
 <div class="tabs">
-<div class="tab active" onclick="showTab('basic',event)">基本</div>
-<div class="tab" onclick="showTab('clinical',event)">臨床</div>
+<div class="tab active" onclick="showTab('basic',event)">Baseline</div>
+<div class="tab" onclick="showTab('clinical',event)">Perfusion</div>
 <div class="tab" onclick="showTab('cp',event)">CP</div>
 </div>
 
-<!-- ================= 基本 ================= -->
+<!-- ================= Baseline ================= -->
 <div id="basic" class="section active">
 
 <div class="row">
@@ -123,7 +123,7 @@ border-top:1px solid #eee;
 
 </div>
 
-<!-- ================= 臨床 ================= -->
+<!-- ================= Perfusion ================= -->
 <div id="clinical" class="section">
 
 <div class="field" style="justify-content:space-around;">
@@ -208,7 +208,6 @@ CI
 
 <script>
 
-// タブ切替
 function showTab(id,e){
 document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"))
 document.getElementById(id).classList.add("active")
@@ -217,14 +216,12 @@ document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
 e.currentTarget.classList.add("active")
 }
 
-// 全計算
 function calcAll(){
 calcPre()
 calcClinical()
 calcCP()
 }
 
-// 基本
 function calcPre(){
 let h=parseFloat(height.value)||0
 let w=parseFloat(weight.value)||0
@@ -244,7 +241,6 @@ dilution.innerHTML="希釈率 : "+((blood+prime)/blood).toFixed(2)
 }
 }
 
-// 臨床
 function calcClinical(){
 let h=parseFloat(height.value)||0
 let w=parseFloat(weight.value)||0
@@ -259,7 +255,7 @@ let targetSBE=parseFloat(target_sbe.value)||0
 if(h&&w){
 let b=Math.sqrt((h*w)/3600)
 let flow=ci*b
-flow && (document.getElementById("flow").innerHTML="Flow : "+flow.toFixed(2))
+document.getElementById("flow").innerHTML="Flow : "+flow.toFixed(2)
 
 let do2=1.34*hb*sao2*flow*10/b
 
@@ -280,7 +276,6 @@ meylon.innerHTML="必要メイロン : "+m.toFixed(0)
 }
 }
 
-// CP
 function calcCP(){
 let w=parseFloat(weight.value)||0
 let ratio=document.getElementById("cp_ratio").checked?1.5:1
@@ -314,7 +309,6 @@ if(r3) kPred3.innerHTML="予測K : "+r3.toFixed(2)
 totalK.innerHTML="総K投与量 : "+total.toFixed(1)+" mEq"
 }
 
-// ボタン
 function adjust(id,delta){
 let el=document.getElementById(id)
 let v=parseFloat(el.value)||0
