@@ -87,7 +87,7 @@ font-weight:bold;
 <div class="tab" onclick="showTab('cp',event)">CP</div>
 </div>
 
-<!-- ===== Baseline（完全復元） ===== -->
+<!-- ===== Baseline ===== -->
 <div id="basic" class="section active">
 
 <div class="row">
@@ -109,26 +109,35 @@ font-weight:bold;
 
 </div>
 
-<!-- ===== Perfusion（修正版） ===== -->
+<!-- ===== Perfusion ===== -->
 <div id="clinical" class="section">
 
 <h3 style="text-align:center;">CDI Data</h3>
 
 <div class="cdi">
 
-<div>Hb　<input id="hb_now" value="7.5" readonly></div>
+<div>Hb　<input id="hb_now" value="7.5" readonly onclick="select(this)"></div>
 <br>
-<div>SBE　<input id="sbe_now" value="-5" readonly></div>
+<div>SBE　<input id="sbe_now" value="-5" readonly onclick="select(this)"></div>
 <br>
-<div>SaO2　<input id="sao2_now" value="100" readonly></div>
+<div>SaO2　<input id="sao2_now" value="100" readonly onclick="select(this)"></div>
 <br>
-<div>CI　<input id="ci_now" value="2.4" readonly></div>
+<div>CI　<input id="ci_now" value="2.4" readonly onclick="select(this)"></div>
 
 </div>
 
 <div class="control">
-<button class="ctrl" onclick="changeVal('hb_now',-0.1)">－</button>
-<button class="ctrl" onclick="changeVal('hb_now',0.1)">＋</button>
+<button class="ctrl"
+onmousedown="startPress(-0.1)"
+onmouseup="stopPress()"
+ontouchstart="startPress(-0.1)"
+ontouchend="stopPress()">－</button>
+
+<button class="ctrl"
+onmousedown="startPress(0.1)"
+onmouseup="stopPress()"
+ontouchstart="startPress(0.1)"
+ontouchend="stopPress()">＋</button>
 </div>
 
 <hr>
@@ -163,7 +172,7 @@ font-weight:bold;
 
 <script>
 
-// タブ
+// ===== タブ =====
 function showTab(id,e){
 document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"))
 document.getElementById(id).classList.add("active")
@@ -171,13 +180,13 @@ document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
 e.currentTarget.classList.add("active")
 }
 
-// 計算
+// ===== 計算 =====
 function calcAll(){
 calcPre()
 calcClinical()
 }
 
-// Baseline
+// ===== Baseline =====
 function calcPre(){
 let h=parseFloat(height.value)||0
 let w=parseFloat(weight.value)||0
@@ -197,7 +206,7 @@ dilution.innerHTML="希釈率 : "+((blood+prime)/blood).toFixed(2)
 }
 }
 
-// Perfusion
+// ===== Perfusion =====
 function calcClinical(){
 let h=parseFloat(height.value)||0
 let w=parseFloat(weight.value)||0
@@ -229,15 +238,32 @@ document.getElementById("meylon").innerText=m.toFixed(0)
 }
 }
 
-// 数値変更
-function changeVal(id,delta){
-let el=document.getElementById(id)
-let v=parseFloat(el.value)||0
+// ===== 選択＆長押し =====
+let selected = document.getElementById("hb_now")
+let timer = null
+
+function select(el){
+selected = el
+}
+
+function changeVal(delta){
+if(!selected) return
+let v=parseFloat(selected.value)||0
 v+=delta
-el.value=v.toFixed(1)
+selected.value=v.toFixed(1)
 calcAll()
 }
 
+function startPress(delta){
+changeVal(delta)
+timer=setInterval(()=>changeVal(delta),100)
+}
+
+function stopPress(){
+clearInterval(timer)
+}
+
+// ===== 調整 =====
 function adjust(id,delta){
 let el=document.getElementById(id)
 let v=parseFloat(el.value)||0
