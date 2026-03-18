@@ -16,48 +16,62 @@ body{font-family:-apple-system;background:#f2f2f7;padding:16px;}
 .section{display:none;}
 .section.active{display:block;}
 
+.row{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-bottom:10px;
+}
+
+.field{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:#fafafa;
+padding:8px;
+border-radius:10px;
+}
+
 input{
-width:60px;
+width:65px;
 text-align:center;
-font-size:18px;
+font-size:16px;
 border:none;
+background:transparent;
+}
+
+/* CDI */
+.cdi{
+text-align:center;
+margin-bottom:15px;
+}
+
+.cdi input{
 background:#fafafa;
 border-radius:8px;
 padding:6px;
 }
 
-/* CDI グリッド */
-.cdi-grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:20px;
-text-align:center;
-margin-bottom:20px;
-}
-
-.selected{
-outline:3px solid #007aff;
-}
-
-/* ±操作 */
+/* 操作 */
 .control{
 display:flex;
 justify-content:center;
 gap:40px;
-margin-top:10px;
+margin:15px 0;
 }
 
-.ctrl-btn{
+.ctrl{
 font-size:24px;
 padding:10px 20px;
-border-radius:10px;
 background:#ddd;
+border-radius:10px;
 }
 
+/* 結果 */
 .result{
-font-size:18px;
 text-align:center;
-margin-top:10px;
+font-size:18px;
+margin:5px;
 font-weight:bold;
 }
 </style>
@@ -73,53 +87,48 @@ font-weight:bold;
 <div class="tab" onclick="showTab('cp',event)">CP</div>
 </div>
 
-<!-- ===== Baseline（そのまま） ===== -->
+<!-- ===== Baseline（完全復元） ===== -->
 <div id="basic" class="section active">
-<input id="height" placeholder="身長" inputmode="decimal" oninput="calcAll()">
-<input id="weight" placeholder="体重" inputmode="decimal" oninput="calcAll()">
-<input id="hb" placeholder="Hb" inputmode="decimal" oninput="calcAll()">
-<input id="alb" placeholder="Alb" inputmode="decimal" oninput="calcAll()">
-<input id="prime" placeholder="Prime" inputmode="decimal" oninput="calcAll()">
+
+<div class="row">
+<div class="field">身長<input id="height" inputmode="decimal" oninput="calcAll()"></div>
+<div class="field">体重<input id="weight" inputmode="decimal" oninput="calcAll()"></div>
+</div>
+
+<div class="row">
+<div class="field">Hb<input id="hb" inputmode="decimal" oninput="calcAll()"></div>
+<div class="field">Alb<input id="alb" inputmode="decimal" oninput="calcAll()"></div>
+</div>
+
+<div class="field">Prime<input id="prime" inputmode="decimal" oninput="calcAll()"></div>
 
 <div id="bsa" class="result">BSA : --</div>
 <div id="hbDil" class="result">予想Hb : --</div>
 <div id="dilution" class="result">希釈率 : --</div>
 <div id="albDil" class="result">予想Alb : --</div>
+
 </div>
 
-<!-- ===== Perfusion（新UI） ===== -->
+<!-- ===== Perfusion（修正版） ===== -->
 <div id="clinical" class="section">
 
 <h3 style="text-align:center;">CDI Data</h3>
 
-<div class="cdi-grid">
+<div class="cdi">
 
-<div>
-Hb<br>
-<input id="hb_now" value="7.5" onclick="selectInput(this)" oninput="calcAll()">
-</div>
-
-<div>
-SBE<br>
-<input id="sbe_now" value="-5" onclick="selectInput(this)" oninput="calcAll()">
-</div>
-
-<div>
-SaO2<br>
-<input id="sao2_now" value="100" onclick="selectInput(this)" oninput="calcAll()">
-</div>
-
-<div>
-CI<br>
-<input id="ci_now" value="2.4" onclick="selectInput(this)" oninput="calcAll()">
-</div>
+<div>Hb　<input id="hb_now" value="7.5" readonly></div>
+<br>
+<div>SBE　<input id="sbe_now" value="-5" readonly></div>
+<br>
+<div>SaO2　<input id="sao2_now" value="100" readonly></div>
+<br>
+<div>CI　<input id="ci_now" value="2.4" readonly></div>
 
 </div>
 
-<!-- ±操作 -->
 <div class="control">
-<button class="ctrl-btn" id="minus">－</button>
-<button class="ctrl-btn" id="plus">＋</button>
+<button class="ctrl" onclick="changeVal('hb_now',-0.1)">－</button>
+<button class="ctrl" onclick="changeVal('hb_now',0.1)">＋</button>
 </div>
 
 <hr>
@@ -137,7 +146,7 @@ CI<br>
 <div style="text-align:center;">
 目標Hb
 <button onclick="adjust('target_hb',-0.5)">-0.5</button>
-<input id="target_hb" value="9" oninput="calcAll()">
+<input id="target_hb" value="9" readonly>
 <button onclick="adjust('target_hb',0.5)">+0.5</button>
 必要RBC <span id="rbc">--</span>
 </div>
@@ -145,7 +154,7 @@ CI<br>
 <div style="text-align:center;">
 目標SBE
 <button onclick="adjust('target_sbe',-1)">-1</button>
-<input id="target_sbe" value="0" oninput="calcAll()">
+<input id="target_sbe" value="0" readonly>
 <button onclick="adjust('target_sbe',1)">+1</button>
 必要メイロン <span id="meylon">--</span>
 </div>
@@ -153,37 +162,6 @@ CI<br>
 </div>
 
 <script>
-
-let selected=null
-let interval=null
-
-function selectInput(el){
-document.querySelectorAll("input").forEach(i=>i.classList.remove("selected"))
-el.classList.add("selected")
-selected=el
-}
-
-// 長押し処理
-function startAdjust(delta){
-if(!selected) return
-interval=setInterval(()=>{
-let v=parseFloat(selected.value)||0
-v+=delta
-selected.value=v.toFixed(1)
-calcAll()
-},100)
-}
-
-function stopAdjust(){
-clearInterval(interval)
-}
-
-// ボタン設定
-document.getElementById("plus").onmousedown=()=>startAdjust(0.1)
-document.getElementById("minus").onmousedown=()=>startAdjust(-0.1)
-
-document.onmouseup=stopAdjust
-document.onmouseleave=stopAdjust
 
 // タブ
 function showTab(id,e){
@@ -193,13 +171,13 @@ document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
 e.currentTarget.classList.add("active")
 }
 
-// 計算（そのまま）
+// 計算
 function calcAll(){
 calcPre()
 calcClinical()
 }
 
-// 基本
+// Baseline
 function calcPre(){
 let h=parseFloat(height.value)||0
 let w=parseFloat(weight.value)||0
@@ -219,7 +197,7 @@ dilution.innerHTML="希釈率 : "+((blood+prime)/blood).toFixed(2)
 }
 }
 
-// 臨床
+// Perfusion
 function calcClinical(){
 let h=parseFloat(height.value)||0
 let w=parseFloat(weight.value)||0
@@ -233,8 +211,9 @@ let targetSBE=parseFloat(target_sbe.value)||0
 
 if(h&&w){
 let b=Math.sqrt((h*w)/3600)
+
 let flow=ci*b
-flow && (flowEl.innerHTML="Flow : "+flow.toFixed(2))
+document.getElementById("flow").innerHTML="Flow : "+flow.toFixed(2)
 
 let do2=1.34*hb*sao2*flow*10/b
 document.getElementById("do2").innerHTML="DO2 : "+do2.toFixed(0)
@@ -250,7 +229,15 @@ document.getElementById("meylon").innerText=m.toFixed(0)
 }
 }
 
-// adjust
+// 数値変更
+function changeVal(id,delta){
+let el=document.getElementById(id)
+let v=parseFloat(el.value)||0
+v+=delta
+el.value=v.toFixed(1)
+calcAll()
+}
+
 function adjust(id,delta){
 let el=document.getElementById(id)
 let v=parseFloat(el.value)||0
