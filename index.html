@@ -292,7 +292,8 @@ if(do2<280) color="red"
 else if(do2<330) color="orange"
 else color="green"
 
-document.getElementById("do2").innerHTML="<span style='color:"+color+"'>DO2 : "+do2.toFixed(0)+"</span>"
+document.getElementById("do2").innerHTML=
+"<span style='color:"+color+"'>DO2 : "+do2.toFixed(0)+"</span>　DO2i : "+(do2/b).toFixed(0)
 
 let r=targetHb-hb
 if(r<0)r=0
