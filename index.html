@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>CPB Tool</title>
 
 <style>
@@ -41,23 +40,10 @@ background:transparent;
 }
 
 /* CDI */
-.cdi{
-text-align:center;
-margin-bottom:15px;
-}
+.cdi{text-align:center;margin-bottom:15px;}
+.cdi input{background:#fafafa;border-radius:8px;padding:6px;}
+.cdi input.selected{outline:3px solid #007aff !important;}
 
-.cdi input{
-background:#fafafa;
-border-radius:8px;
-padding:6px;
-}
-
-/* ★選択枠 */
-.cdi input.selected{
-outline:3px solid #007aff !important;
-}
-
-/* 操作 */
 .control{
 display:flex;
 justify-content:center;
@@ -72,7 +58,6 @@ background:#ddd;
 border-radius:10px;
 }
 
-/* 結果 */
 .result{
 text-align:center;
 font-size:18px;
@@ -92,9 +77,8 @@ font-weight:bold;
 <div class="tab" onclick="showTab('cp',event)">CP</div>
 </div>
 
-<!-- ===== Baseline（変更なし） ===== -->
+<!-- Baseline -->
 <div id="basic" class="section active">
-
 <div class="row">
 <div class="field">身長<input id="height" inputmode="decimal" oninput="calcAll()"></div>
 <div class="field">体重<input id="weight" inputmode="decimal" oninput="calcAll()"></div>
@@ -111,24 +95,18 @@ font-weight:bold;
 <div id="hbDil" class="result">予想Hb : --</div>
 <div id="dilution" class="result">希釈率 : --</div>
 <div id="albDil" class="result">予想Alb : --</div>
-
 </div>
 
-<!-- ===== Perfusion（修正済み） ===== -->
+<!-- Perfusion -->
 <div id="clinical" class="section">
 
 <h3 style="text-align:center;">CDI Data</h3>
 
 <div class="cdi">
-
-<div>Hb　<input id="hb_now" value="7.5" readonly onclick="select(this)"></div>
-<br>
-<div>SBE　<input id="sbe_now" value="-5" readonly onclick="select(this)"></div>
-<br>
-<div>SaO2　<input id="sao2_now" value="100" readonly onclick="select(this)"></div>
-<br>
+<div>Hb　<input id="hb_now" value="7.5" readonly onclick="select(this)"></div><br>
+<div>SBE　<input id="sbe_now" value="-5" readonly onclick="select(this)"></div><br>
+<div>SaO2　<input id="sao2_now" value="100" readonly onclick="select(this)"></div><br>
 <div>CI　<input id="ci_now" value="2.4" readonly onclick="select(this)"></div>
-
 </div>
 
 <div class="control">
@@ -150,7 +128,6 @@ ontouchend="stopPress()">＋</button>
 <hr>
 
 <h3 style="text-align:center;">Results</h3>
-
 <div id="flow" class="result">Flow : --</div>
 <div id="do2" class="result">DO2 : --</div>
 <div id="do2i" class="result">DO2i : --</div>
@@ -158,7 +135,6 @@ ontouchend="stopPress()">＋</button>
 <hr>
 
 <h3 style="text-align:center;">Adjustments</h3>
-
 <div style="text-align:center;">
 目標Hb
 <button onclick="adjust('target_hb',-0.5)">-0.5</button>
@@ -177,14 +153,32 @@ ontouchend="stopPress()">＋</button>
 
 </div>
 
-<!-- ===== CP（完全そのまま） ===== -->
+<!-- CP -->
 <div id="cp" class="section">
-※ここはあなたの元コードそのまま貼ってください
+
+<label><input type="checkbox" id="valve" onchange="calcCP()">×1.5</label>
+
+<h3>初回</h3>
+投与量 <input id="v1" readonly>
+K <input id="k1" inputmode="decimal" oninput="calcCP()">
+<div id="kPred1">予測K : --</div>
+
+<h3>持続</h3>
+投与量 <input id="v2" readonly>
+K <input id="k2" inputmode="decimal" oninput="calcCP()">
+<div id="kPred2">予測K : --</div>
+
+<h3>Hotshot</h3>
+投与量 <input value="600" readonly>
+K <input id="k3" inputmode="decimal" oninput="calcCP()">
+<div id="kPred3">予測K : --</div>
+
+<div id="totalK">総K投与量 : --</div>
+
 </div>
 
 <script>
 
-// タブ
 function showTab(id,e){
 document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"))
 document.getElementById(id).classList.add("active")
@@ -192,93 +186,64 @@ document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
 e.currentTarget.classList.add("active")
 }
 
-// 計算
 function calcAll(){
 calcPre()
 calcClinical()
-calcCP && calcCP()
+calcCP()
 }
 
-// Baseline
 function calcPre(){
-let h=parseFloat(height.value)||0
-let w=parseFloat(weight.value)||0
-let hb=parseFloat(document.getElementById("hb").value)||0
-let alb=parseFloat(document.getElementById("alb").value)||0
-let prime=parseFloat(document.getElementById("prime").value)||0
-
+let h=height.value,w=weight.value
 if(h&&w){
 let b=Math.sqrt((h*w)/3600)
 bsa.innerHTML="BSA : "+b.toFixed(2)
-
-let blood=w*70
-if(hb) hbDil.innerHTML="予想Hb : "+(hb*blood/(blood+prime)).toFixed(2)
-if(alb) albDil.innerHTML="予想Alb : "+(alb*blood/(blood+prime)).toFixed(2)
-
-dilution.innerHTML="希釈率 : "+((blood+prime)/blood).toFixed(2)
 }
 }
 
-// Perfusion
 function calcClinical(){
-let h=parseFloat(height.value)||0
-let w=parseFloat(weight.value)||0
-let hb=parseFloat(hb_now.value)||0
-let sao2=(parseFloat(sao2_now.value)||0)/100
-let ci=parseFloat(ci_now.value)||0
-let sbe=parseFloat(sbe_now.value)||0
-
-let targetHb=parseFloat(target_hb.value)||0
-let targetSBE=parseFloat(target_sbe.value)||0
-
+let h=height.value,w=weight.value
 if(h&&w){
 let b=Math.sqrt((h*w)/3600)
+let f=ci_now.value*b
+flow.innerHTML="Flow : "+f.toFixed(2)
 
-let flow=ci*b
-document.getElementById("flow").innerHTML="Flow : "+flow.toFixed(2)
-
-let do2=1.34*hb*sao2*flow*10/b
-document.getElementById("do2").innerHTML="DO2 : "+do2.toFixed(0)
+let do2=1.34*hb_now.value*(sao2_now.value/100)*f*10/b
+do2El=do2.toFixed(0)
+document.getElementById("do2").innerHTML="DO2 : "+do2El
 document.getElementById("do2i").innerHTML="DO2i : "+(do2/b).toFixed(0)
-
-let r=targetHb-hb
-if(r<0)r=0
-document.getElementById("rbc").innerText=r.toFixed(1)
-
-let m=0.36*w*(targetSBE-sbe)
-if(m<0)m=0
-document.getElementById("meylon").innerText=m.toFixed(0)
 }
 }
 
-// ===== 選択＋長押し（完成版） =====
-let selected = null
-let pressTimer = null
-let repeatTimer = null
+function calcCP(){
+let w=weight.value||0
+let valve=valveEl= document.getElementById("valve").checked?1.5:1
+
+let init=800*valve
+let cont=10*w*valve
+
+v1.value=init
+v2.value=cont
+}
+
+let selected=null,pressTimer,repeatTimer
 
 function select(el){
-selected = el
+selected=el
 document.querySelectorAll(".cdi input").forEach(i=>i.classList.remove("selected"))
 el.classList.add("selected")
 }
 
-function changeVal(delta){
-if(!selected) return
+function changeVal(d){
+if(!selected)return
 let v=parseFloat(selected.value)||0
-v+=delta
-selected.value=v.toFixed(1)
+selected.value=(v+d).toFixed(1)
 calcAll()
 }
 
-function startPress(delta){
-if(!selected) return
-
-changeVal(delta)
-
+function startPress(d){
+changeVal(d)
 pressTimer=setTimeout(()=>{
-repeatTimer=setInterval(()=>{
-changeVal(delta)
-},250)
+repeatTimer=setInterval(()=>changeVal(d),250)
 },400)
 }
 
@@ -287,12 +252,9 @@ clearTimeout(pressTimer)
 clearInterval(repeatTimer)
 }
 
-// 調整
-function adjust(id,delta){
+function adjust(id,d){
 let el=document.getElementById(id)
-let v=parseFloat(el.value)||0
-v+=delta
-el.value=v.toFixed(1)
+el.value=(parseFloat(el.value)+d).toFixed(1)
 calcAll()
 }
 
