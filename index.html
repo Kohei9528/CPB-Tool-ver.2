@@ -52,6 +52,11 @@ border-radius:8px;
 padding:6px;
 }
 
+/* ★選択枠（今回追加） */
+.cdi input.selected{
+outline:3px solid #007aff;
+}
+
 /* 操作 */
 .control{
 display:flex;
@@ -87,7 +92,7 @@ font-weight:bold;
 <div class="tab" onclick="showTab('cp',event)">CP</div>
 </div>
 
-<!-- ===== Baseline ===== -->
+<!-- ===== Baseline（そのまま） ===== -->
 <div id="basic" class="section active">
 
 <div class="row">
@@ -130,12 +135,14 @@ font-weight:bold;
 <button class="ctrl"
 onmousedown="startPress(-0.1)"
 onmouseup="stopPress()"
+onmouseleave="stopPress()"
 ontouchstart="startPress(-0.1)"
 ontouchend="stopPress()">－</button>
 
 <button class="ctrl"
 onmousedown="startPress(0.1)"
 onmouseup="stopPress()"
+onmouseleave="stopPress()"
 ontouchstart="startPress(0.1)"
 ontouchend="stopPress()">＋</button>
 </div>
@@ -238,14 +245,14 @@ document.getElementById("meylon").innerText=m.toFixed(0)
 }
 }
 
-// ===== 選択＆長押し（修正版） =====
+// ★選択＆長押し（完成版）
 let selected = null
 let timer = null
 
 function select(el){
 selected = el
-document.querySelectorAll(".cdi input").forEach(i=>i.style.outline="none")
-el.style.outline="3px solid #007aff"
+document.querySelectorAll(".cdi input").forEach(i=>i.classList.remove("selected"))
+el.classList.add("selected")
 }
 
 function changeVal(delta){
@@ -258,9 +265,10 @@ calcAll()
 
 function startPress(delta){
 if(!selected) return
+
 changeVal(delta)
 
-setTimeout(()=>{
+timer=setTimeout(()=>{
 timer=setInterval(()=>{
 changeVal(delta)
 },200)
@@ -269,6 +277,7 @@ changeVal(delta)
 
 function stopPress(){
 clearInterval(timer)
+clearTimeout(timer)
 }
 
 // 調整
