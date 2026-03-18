@@ -1,6 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CPB Tool</title>
+
+<style>
+body{
+font-family:-apple-system;
+background:#f2f2f7;
+padding:16px;
+}
+
+/* タブ */
+.tabs{
+display:flex;
+gap:8px;
+margin-bottom:12px;
+}
+
+.tab{
+flex:1;
+padding:10px;
+text-align:center;
+background:#ddd;
+border-radius:10px;
+font-weight:600;
+}
+
+.tab.active{
+background:#007aff;
+color:white;
+}
+
+/* セクション */
+.section{display:none;}
+.section.active{display:block;}
+
+/* 入力UI */
+.row{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-bottom:6px;
+}
+
+.field{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:#fafafa;
+padding:8px 10px;
+border-radius:10px;
+font-size:14px;
+}
+
+input{
+width:65px;
+text-align:center;
+font-size:16px;
+border:none;
+background:transparent;
+outline:none;
+}
+
+button{
+padding:4px 6px;
+border:none;
+border-radius:6px;
+background:#e0e0e0;
+font-size:12px;
+}
+
+.result{
+font-size:18px;
+font-weight:bold;
+margin-top:6px;
+}
+
+hr{
+margin:10px 0;
+border:none;
+border-top:1px solid #eee;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>CPB Tool</h2>
+
+<!-- タブ -->
+<div class="tabs">
+<div class="tab active" onclick="showTab('basic',event)">Baseline</div>
+<div class="tab" onclick="showTab('clinical',event)">Perfusion</div>
+<div class="tab" onclick="showTab('cp',event)">CP</div>
+</div>
+
+<!-- ================= Baseline ================= -->
+<div id="basic" class="section active">
+
+<div class="row">
+<div class="field">身長<input id="height" inputmode="decimal" oninput="calcAll()"></div>
+<div class="field">体重<input id="weight" inputmode="decimal" oninput="calcAll()"></div>
+</div>
+
+<div class="row">
+<div class="field">Hb<input id="hb" inputmode="decimal" oninput="calcAll()"></div>
+<div class="field">Alb<input id="alb" inputmode="decimal" oninput="calcAll()"></div>
+</div>
+
+<div class="field">Prime<input id="prime" inputmode="decimal" oninput="calcAll()"></div>
+
+<hr>
+
+<div id="bsa" class="result">BSA : --</div>
+<div id="hbDil" class="result">予想Hb : --</div>
+<div id="dilution" class="result">希釈率 : --</div>
+<div id="albDil" class="result">予想Alb : --</div>
+
+</div>
+
+<!-- ================= Perfusion（UI改善済み） ================= -->
 <div id="clinical" class="section">
 
-<!-- ===== CDI Data ===== -->
 <h3 style="text-align:center;">CDI Data</h3>
 
 <div style="text-align:center; margin-bottom:12px;">
@@ -45,7 +170,6 @@
 
 <hr>
 
-<!-- ===== Results ===== -->
 <h3 style="text-align:center;">Results</h3>
 
 <div id="flow" class="result" style="text-align:center;">Flow : --</div>
@@ -53,7 +177,6 @@
 
 <hr>
 
-<!-- ===== Adjustments ===== -->
 <h3 style="text-align:center;">Adjustments</h3>
 
 <div style="text-align:center;">
@@ -79,3 +202,150 @@
 </div>
 
 </div>
+
+<!-- ================= CP ================= -->
+<div id="cp" class="section">
+
+<label><input type="checkbox" id="cp_ratio" onchange="calcAll()">×1.5</label>
+
+<h3>初回</h3>
+<div class="row">
+<div class="field">投与量<input id="cp_init" value="800" readonly></div>
+<div class="field">K<input id="k1" inputmode="decimal" oninput="calcAll()"></div>
+</div>
+<div id="kPred1" class="result">予測K : --</div>
+
+<h3>持続</h3>
+<div class="row">
+<div class="field">投与量<input id="cp_cont" readonly></div>
+<div class="field">K<input id="k2" inputmode="decimal" oninput="calcAll()"></div>
+</div>
+<div id="kPred2" class="result">予測K : --</div>
+
+<h3>Hotshot</h3>
+<div class="row">
+<div class="field">投与量<input value="600" readonly></div>
+<div class="field">K<input id="k3" inputmode="decimal" oninput="calcAll()"></div>
+</div>
+<div id="kPred3" class="result">予測K : --</div>
+
+<hr>
+<div id="totalK" class="result">総K投与量 : --</div>
+
+</div>
+
+<script>
+
+function showTab(id,e){
+document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"))
+document.getElementById(id).classList.add("active")
+
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
+e.currentTarget.classList.add("active")
+}
+
+function calcAll(){
+calcPre()
+calcClinical()
+calcCP()
+}
+
+function calcPre(){
+let h=parseFloat(height.value)||0
+let w=parseFloat(weight.value)||0
+let hb=parseFloat(document.getElementById("hb").value)||0
+let alb=parseFloat(document.getElementById("alb").value)||0
+let prime=parseFloat(document.getElementById("prime").value)||0
+
+if(h&&w){
+let b=Math.sqrt((h*w)/3600)
+bsa.innerHTML="BSA : "+b.toFixed(2)
+
+let blood=w*70
+if(hb) hbDil.innerHTML="予想Hb : "+(hb*blood/(blood+prime)).toFixed(2)
+if(alb) albDil.innerHTML="予想Alb : "+(alb*blood/(blood+prime)).toFixed(2)
+
+dilution.innerHTML="希釈率 : "+((blood+prime)/blood).toFixed(2)
+}
+}
+
+function calcClinical(){
+let h=parseFloat(height.value)||0
+let w=parseFloat(weight.value)||0
+let hb=parseFloat(hb_now.value)||0
+let sao2=(parseFloat(sao2_now.value)||0)/100
+let ci=parseFloat(ci_now.value)||0
+let sbe=parseFloat(sbe_now.value)||0
+
+let targetHb=parseFloat(target_hb.value)||0
+let targetSBE=parseFloat(target_sbe.value)||0
+
+if(h&&w){
+let b=Math.sqrt((h*w)/3600)
+let flow=ci*b
+document.getElementById("flow").innerHTML="Flow : "+flow.toFixed(2)
+
+let do2=1.34*hb*sao2*flow*10/b
+
+let color="black"
+if(do2<280) color="red"
+else if(do2<330) color="orange"
+else color="green"
+
+document.getElementById("do2").innerHTML="<span style='color:"+color+"'>DO2 : "+do2.toFixed(0)+"</span>"
+
+let r=targetHb-hb
+if(r<0)r=0
+document.getElementById("rbc").innerText=r.toFixed(1)
+
+let m=0.36*w*(targetSBE-sbe)
+if(m<0)m=0
+document.getElementById("meylon").innerText=m.toFixed(0)
+}
+}
+
+function calcCP(){
+let w=parseFloat(weight.value)||0
+let ratio=document.getElementById("cp_ratio").checked?1.5:1
+
+let init=800*ratio
+cp_init.value=init.toFixed(0)
+
+let cont=10*w*ratio
+cp_cont.value=cont.toFixed(0)
+
+let ecf=w*0.2
+let k=37
+let total=0
+
+function calcK(val,vol,div){
+if(!val||!w)return
+let dose=(vol/div/1000)*k
+total+=dose
+return val+(dose/ecf)
+}
+
+let r1=calcK(parseFloat(k1.value),init,2)
+if(r1) kPred1.innerHTML="予測K : "+r1.toFixed(2)
+
+let r2=calcK(parseFloat(k2.value),cont,3)
+if(r2) kPred2.innerHTML="予測K : "+r2.toFixed(2)
+
+let r3=calcK(parseFloat(k3.value),600,4)
+if(r3) kPred3.innerHTML="予測K : "+r3.toFixed(2)
+
+totalK.innerHTML="総K投与量 : "+total.toFixed(1)+" mEq"
+}
+
+function adjust(id,delta){
+let el=document.getElementById(id)
+let v=parseFloat(el.value)||0
+v+=delta
+el.value=v.toFixed(1)
+calcAll()
+}
+
+</script>
+
+</body>
+</html>
