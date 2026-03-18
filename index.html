@@ -172,7 +172,7 @@ ontouchend="stopPress()">＋</button>
 
 <script>
 
-// ===== タブ =====
+// タブ
 function showTab(id,e){
 document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"))
 document.getElementById(id).classList.add("active")
@@ -180,13 +180,13 @@ document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
 e.currentTarget.classList.add("active")
 }
 
-// ===== 計算 =====
+// 計算
 function calcAll(){
 calcPre()
 calcClinical()
 }
 
-// ===== Baseline =====
+// Baseline
 function calcPre(){
 let h=parseFloat(height.value)||0
 let w=parseFloat(weight.value)||0
@@ -206,7 +206,7 @@ dilution.innerHTML="希釈率 : "+((blood+prime)/blood).toFixed(2)
 }
 }
 
-// ===== Perfusion =====
+// Perfusion
 function calcClinical(){
 let h=parseFloat(height.value)||0
 let w=parseFloat(weight.value)||0
@@ -238,12 +238,14 @@ document.getElementById("meylon").innerText=m.toFixed(0)
 }
 }
 
-// ===== 選択＆長押し =====
-let selected = document.getElementById("hb_now")
+// ===== 選択＆長押し（修正版） =====
+let selected = null
 let timer = null
 
 function select(el){
 selected = el
+document.querySelectorAll(".cdi input").forEach(i=>i.style.outline="none")
+el.style.outline="3px solid #007aff"
 }
 
 function changeVal(delta){
@@ -255,15 +257,21 @@ calcAll()
 }
 
 function startPress(delta){
+if(!selected) return
 changeVal(delta)
-timer=setInterval(()=>changeVal(delta),100)
+
+setTimeout(()=>{
+timer=setInterval(()=>{
+changeVal(delta)
+},200)
+},400)
 }
 
 function stopPress(){
 clearInterval(timer)
 }
 
-// ===== 調整 =====
+// 調整
 function adjust(id,delta){
 let el=document.getElementById(id)
 let v=parseFloat(el.value)||0
