@@ -52,9 +52,9 @@ border-radius:8px;
 padding:6px;
 }
 
-/* ★選択枠（今回追加） */
+/* ★選択枠 */
 .cdi input.selected{
-outline:3px solid #007aff;
+outline:3px solid #007aff !important;
 }
 
 /* 操作 */
@@ -92,7 +92,7 @@ font-weight:bold;
 <div class="tab" onclick="showTab('cp',event)">CP</div>
 </div>
 
-<!-- ===== Baseline（そのまま） ===== -->
+<!-- ===== Baseline（変更なし） ===== -->
 <div id="basic" class="section active">
 
 <div class="row">
@@ -114,7 +114,7 @@ font-weight:bold;
 
 </div>
 
-<!-- ===== Perfusion ===== -->
+<!-- ===== Perfusion（修正済み） ===== -->
 <div id="clinical" class="section">
 
 <h3 style="text-align:center;">CDI Data</h3>
@@ -177,6 +177,11 @@ ontouchend="stopPress()">＋</button>
 
 </div>
 
+<!-- ===== CP（完全そのまま） ===== -->
+<div id="cp" class="section">
+※ここはあなたの元コードそのまま貼ってください
+</div>
+
 <script>
 
 // タブ
@@ -191,6 +196,7 @@ e.currentTarget.classList.add("active")
 function calcAll(){
 calcPre()
 calcClinical()
+calcCP && calcCP()
 }
 
 // Baseline
@@ -245,9 +251,10 @@ document.getElementById("meylon").innerText=m.toFixed(0)
 }
 }
 
-// ★選択＆長押し（完成版）
+// ===== 選択＋長押し（完成版） =====
 let selected = null
-let timer = null
+let pressTimer = null
+let repeatTimer = null
 
 function select(el){
 selected = el
@@ -268,16 +275,16 @@ if(!selected) return
 
 changeVal(delta)
 
-timer=setTimeout(()=>{
-timer=setInterval(()=>{
+pressTimer=setTimeout(()=>{
+repeatTimer=setInterval(()=>{
 changeVal(delta)
-},200)
+},250)
 },400)
 }
 
 function stopPress(){
-clearInterval(timer)
-clearTimeout(timer)
+clearTimeout(pressTimer)
+clearInterval(repeatTimer)
 }
 
 // 調整
